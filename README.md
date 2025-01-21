@@ -16,7 +16,7 @@ This project provides an advanced integration solution that allows seamless rend
 - Responsive design support
 
 ## 🏗 Project Structure
-
+```
 lib/
 ├── features/
 │ └── main/
@@ -31,7 +31,7 @@ lib/
 │ └── utils/
 │ ├── iframe_handler.dart # iframe management
 │ └── event_handlers.dart # Event handlers
-
+```
 ## 🛠 Technical Details
 
 ### HTML Integration
