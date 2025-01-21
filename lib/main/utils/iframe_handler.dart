@@ -1,3 +1,4 @@
+// ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 import 'dart:convert';
@@ -27,10 +28,10 @@ class IframeHandler {
       if (event.data != null && event.data is String) {
         try {
           final data = jsonDecode(event.data);
-          print('Received event from web: $data');
+          debugPrint('Received event from web: $data');
           onWebEvent(data);
         } catch (e) {
-          print('Error parsing message: $e');
+          debugPrint('Error parsing message: $e');
         }
       }
     });
@@ -106,7 +107,7 @@ class IframeHandler {
                   selection.addRange(range);
                 }
               }
-            } else if ('$eventType' === 'mousemove' && ${isPointerDown}) {
+            } else if ('$eventType' === 'mousemove' && $isPointerDown) {
               // Sürükleme sırasında seçimi güncelle
               if (window.getSelection) {
                 const selection = window.getSelection();
@@ -149,7 +150,7 @@ class IframeHandler {
             }
 
             // Seçim değişikliğini engellememek için event'i durdurma
-            if (('$eventType' === 'mousemove' && ${isPointerDown}) || 
+            if (('$eventType' === 'mousemove' && $isPointerDown) || 
                 '$eventType' === 'mousedown' || 
                 '$eventType' === 'mouseup') {
               event.stopPropagation();

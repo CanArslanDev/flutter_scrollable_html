@@ -5,9 +5,9 @@ class FlutterNativeSection extends StatelessWidget {
   final MainPageController controller;
 
   const FlutterNativeSection({
-    Key? key,
+    super.key,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
