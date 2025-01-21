@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_scrollable_html/main/presentation/pages/main_page.dart';
-import 'package:flutter_scrollable_html/main_page.dart' as page;
 
 void main() {
   runApp(const MyApp());
