@@ -122,13 +122,128 @@ function sendToFlutter(data) {
 
 // Handle messages from Flutter
 window.addEventListener('message', function (event) {
-    if (typeof event.data === 'string') {
-        try {
-            eval(event.data);
-        } catch (e) {
-            console.error('Script execution error:', e);
+  try {
+    if (typeof event.data !== 'string') return;
+
+    const data = JSON.parse(event.data);
+
+    if (data.command === 'mouseEvent') {
+      const element = document.elementFromPoint(data.clientX, data.clientY);
+      if (element) {
+        // Create and send the mouse event
+        const eventInit = {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          detail: 1,
+          screenX: data.screenX,
+          screenY: data.screenY,
+          clientX: data.clientX,
+          clientY: data.clientY,
+          ctrlKey: data.ctrlKey,
+          altKey: data.altKey,
+          shiftKey: data.shiftKey,
+          metaKey: data.metaKey,
+          button: data.button,
+          buttons: data.buttons,
+          relatedTarget: null
+        };
+
+        const mouseEvent = new MouseEvent(data.eventType, eventInit);
+        element.dispatchEvent(mouseEvent);
+
+        // Text selection logic
+        if (data.eventType === 'mousedown') {
+          // For initial selection
+          if (window.getSelection && document.caretPositionFromPoint) {
+            const selection = window.getSelection();
+            const range = document.caretRangeFromPoint(data.clientX, data.clientY);
+            if (range) {
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          }
+        } else if (data.eventType === 'mousemove' && data.isPointerDown) {
+          // Update selection while dragging
+          if (window.getSelection) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+              // Expand current selection
+              const newPosition = document.caretRangeFromPoint(data.clientX, data.clientY);
+              if (newPosition) {
+                try {
+                  // Extend selection to new position
+                  selection.extend(newPosition.startContainer, newPosition.startOffset);
+
+                  // Make the selected text visible
+                  const range = selection.getRangeAt(0);
+                  range.startContainer.parentElement?.scrollIntoView({ block: 'nearest' });
+                } catch (e) {
+                  console.error('Selection error:', e);
+                }
+              }
+            }
+          }
+        } else if (data.eventType === 'mouseup') {
+          // When the mouse is released
+          const clickEvent = new MouseEvent('click', eventInit);
+          element.dispatchEvent(clickEvent);
+
+          // Focus for special elements
+          if (element.tagName === 'TEXTAREA' ||
+              element.tagName === 'INPUT' ||
+              element.hasAttribute('contenteditable') ||
+              element.tagName === 'DIV' && element.id === 'ascii') {
+            element.focus();
+          }
+
+          // Preserve if selection exists
+          const selection = window.getSelection();
+          if (selection && selection.toString().length > 0) {
+            // If there is a selection, preserve the selection
+            document.designMode = 'off';
+          }
         }
+
+        // Stop the event to avoid blocking the selection change
+        if ((data.eventType === 'mousemove' && data.isPointerDown) ||
+            data.eventType === 'mousedown' ||
+            data.eventType === 'mouseup') {
+          event.stopPropagation();
+        }
+      }
+    } else if (data.command === 'keyboardEvent') {
+      const keyboardEvent = new KeyboardEvent(
+        data.eventType, {
+        key: data.key,
+        code: data.code,
+        location: 0,
+        ctrlKey: data.ctrlKey,
+        altKey: data.altKey,
+        shiftKey: data.shiftKey,
+        metaKey: data.metaKey,
+        repeat: false,
+        isComposing: false,
+        charCode: 0,
+        keyCode: data.keyCode,
+        which: data.which,
+      });
+
+      const activeElement = document.activeElement || document.body;
+      activeElement.dispatchEvent(keyboardEvent);
+
+      if (keyboardEvent.type === 'keydown' && activeElement.tagName === 'TEXTAREA') {
+        const inputEvent = new InputEvent('input', {
+          bubbles: true,
+          cancelable: true,
+          data: data.character
+        });
+        activeElement.dispatchEvent(inputEvent);
+      }
     }
+  } catch (e) {
+    console.error('Message handling error:', e);
+  }
 });
 
 // Initialize when page loads
